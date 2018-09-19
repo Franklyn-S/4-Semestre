@@ -1,3 +1,4 @@
+--DROP DATABASE Loja_Franklyn
 CREATE DATABASE Loja_Franklyn;
 
 USE Loja_Franklyn;
@@ -14,7 +15,6 @@ CREATE TABLE fornecedor
 	cep INT not null,
 	CONSTRAINT PK_fornecedor
 	PRIMARY KEY (cod)
-
 );
 
 -- DROP TABLE estoque;
@@ -33,39 +33,40 @@ CREATE TABLE estoque
 			ON UPDATE CASCADE
 );
 
-
---DROP TABLE funcionario
-CREATE TABLE funcionario
-(
-	matr SMALLINT not null,
-	nome char(60),
-	cod_filial SMALLINT not null, --references filial
-	salario DEC(9,2) not null,
-	CONSTRAINT PK_fun
-		PRIMARY KEY (matr)
-
-)
-
---DROP TABLE filial
+-- DROP TABLE filial
 CREATE TABLE filial
 (
 	cod SMALLINT not null,
 	nome char(30),
-	matr_ger SMALLINT not null,
 
 	CONSTRAINT PK_filial
-		PRIMARY KEY(cod),
-	CONSTRAINT FK_gerente
-		FOREIGN KEY (matr_ger) REFERENCES funcionario
+		PRIMARY KEY(cod)
+);
+
+--DROP TABLE vendedor
+CREATE TABLE vendedor
+(
+	matr SMALLINT not null,
+	nome char(60),
+	cod_filial SMALLINT not null, --filial que ele pertence
+	gerencia_filial SMALLINT, --filial que ele gerencia
+	salario DEC(9,2) not null,
+	CONSTRAINT PK_fun
+		PRIMARY KEY (matr),
+	CONSTRAINT Salario_maior_que_mil
+		CHECK (salario > 1000),
+
+	CONSTRAINT FK_gerencia
+		FOREIGN KEY (gerencia_filial) REFERENCES filial
+			ON DELETE CASCADE
+			ON UPDATE CASCADE,
+	CONSTRAINT FK_filial
+		FOREIGN KEY (cod_filial) REFERENCES filial
 			ON DELETE NO ACTION
-			ON UPDATE CASCADE
-	
-)
+			ON UPDATE NO ACTION
+);
 
 
-ALTER TABLE funcionario
-	ADD CONSTRAINT FK_filial 
-	FOREIGN KEY (cod_filial) REFERENCES filial
 
 --DROP TABLE historico
 CREATE TABLE historico
@@ -78,5 +79,11 @@ CREATE TABLE historico
 	CONSTRAINT PK_historico
 		PRIMARY KEY (dt_hora_venda, cod_item, matr_vend),
 	CONSTRAINT FK_vendedor 
-		FOREIGN KEY (matr_vend) REFERENCES funcionario 
-)
+		FOREIGN KEY (matr_vend) REFERENCES vendedor
+		ON DELETE NO ACTION
+		ON UPDATE CASCADE,
+	CONSTRAINT FK_estoque
+		FOREIGN KEY (cod_item) REFERENCES estoque
+		ON DELETE NO ACTION
+		ON UPDATE CASCADE
+);
