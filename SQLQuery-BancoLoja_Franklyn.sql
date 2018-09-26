@@ -13,6 +13,7 @@ CREATE TABLE fornecedor
 	rua VARCHAR(80) not null,
 	numero VARCHAR(8) not null,
 	cep INT not null,
+	cidade varchar(30) not null,
 	CONSTRAINT PK_fornecedor
 	PRIMARY KEY (cod)
 );
@@ -37,10 +38,16 @@ CREATE TABLE estoque
 CREATE TABLE filial
 (
 	cod SMALLINT not null,
-	nome char(30),
+	nome char(30) not null,
+	rua varchar(30) not null,
+	numero smallint not null,
+	cep smallint,
+	cnpj smallint not null,
 
 	CONSTRAINT PK_filial
-		PRIMARY KEY(cod)
+		PRIMARY KEY(cod),
+	CONSTRAINT cnpj_unico
+		UNIQUE(cnpj)
 );
 
 --DROP TABLE vendedor
