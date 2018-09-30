@@ -2,8 +2,6 @@
 #include <vector>
 #include <math.h>
 using namespace std;
-int tamHeap = 0;
-
 
 int pai(int i){
 	return i/2;
@@ -18,7 +16,7 @@ int dir(int i){
 }
 
 
-void maxHeapify(vector<int> &A, int i){
+void maxHeapify(vector<int> &A, int i, int tamHeap){
 	int e = esq(i);
 	int d = dir(i);
 	int maior;
@@ -36,27 +34,27 @@ void maxHeapify(vector<int> &A, int i){
 		A[i] = A[maior];
 		A[maior] = aux;
 
-		maxHeapify(A, maior);
+		maxHeapify(A, maior, tamHeap);
 	}
 }
 
-void buildMaxHeap(vector<int> &A){
-	tamHeap = A.size();
+void buildMaxHeap(vector<int> &A, int tamHeap){
 	for(int i = floor(A.size()/2); i>=1; i--){
-		maxHeapify(A,i);
+		maxHeapify(A,i, tamHeap);
 	}
 }
 
 void heapSort(vector<int> &A){
-	buildMaxHeap(A);
-	for(int i = A.size(); i>=2;i--){
+	int tamHeap = A.size()-1;
+	buildMaxHeap(A, tamHeap);
+	for(int i = tamHeap; i>=2; i--){
 		//troca A[i] with A[maior]
 		int aux = A[1];
 		A[1] = A[i];
 		A[i] = aux;
 
 		tamHeap--;
-		maxHeapify(A,1);
+		maxHeapify(A,1, tamHeap);
 	}
 }
 
@@ -65,7 +63,7 @@ int main(){
 
 	//teste
 	vector<int> A;
-	A.push_back(-1);
+	//A.push_back(-1);
 	A.push_back(5);
 	A.push_back(2);
 	A.push_back(4);
