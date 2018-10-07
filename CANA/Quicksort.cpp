@@ -6,7 +6,7 @@ using namespace std;
 int particao(int A[], int p, int r){
 	int x = A[r];
 	int i = p-1;
-	for (int j=p; j<= r-1 ;j++){
+	for (int j=p; j <= r-1 ;j++){
 		if (A[j] <= x){
 			i++;
 			//troca
