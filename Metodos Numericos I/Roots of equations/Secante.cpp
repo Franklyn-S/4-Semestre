@@ -5,7 +5,7 @@ using namespace std;
 
 
 double f (double x){
-	return pow(x,3)-9*x+3;
+	return -(exp(x)/2) + 2*cos(x);
 }
 
 
@@ -27,14 +27,19 @@ double Secant(double (*f)(double), double x0, double x1, double e1, double e2, i
 	cout << fixed;
 	cout << "k" << " | ";
 	cout << "   x  " << " | ";
-	cout << "f(x)" << endl;
+	cout << " f(x)  " << " | ";
+	cout << "b-a" << endl;
 
 	while(k < maxInter){
 		x2 = (x0*fx1-x1*fx0)/(fx1-fx0);
 		fx2 = (*f)(x2);
 		cout << k << " | ";
 		cout << x2 << " | ";
-		cout << fx2 << endl;
+		if(fx2>0){
+			cout << "+";
+		}
+		cout << fx2 << " | ";
+		cout << x1-x0 << endl;
 		if (abs(x2-x1) < e2 or abs(fx2) < e1 ){
 			return x2;
 		}
@@ -53,7 +58,7 @@ double Secant(double (*f)(double), double x0, double x1, double e1, double e2, i
 
 int main()
 {
-	double raiz = Secant(f, 0, 1, 5*pow(10,-4), 5*pow(10,-4), 20);
-	cout << raiz << endl;
+	double raiz = Secant(f, 0, 1, pow(10,-4), pow(10,-4), 20);
+	cout << "Raiz: " << raiz << endl;
 	return 0;
 }
