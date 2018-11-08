@@ -1,11 +1,13 @@
 #include <iostream>
+#include <cmath>
+#include <limits>
 using namespace std;
 
 
 int main(int argc, char const *argv[]){
 	// Ax = b
-	double m, s; //aux
-	int row, col, n;
+	double m, s, maior, aux; //auxiliares
+	int row, col, n, linha;
 	row = 3;
 	col = 3;
 	n = 3;
@@ -21,10 +23,26 @@ int main(int argc, char const *argv[]){
 		{38}
 	};
 	
-
 	//Eliminação
 	for (int k = 0; k < n-1; k++){//percorre as colunas
-		for (int i = k+1; i < n; i++){ //percorr as linhas
+		maior = -numeric_limits<double>::max();
+		for (int l = k; l < n; l++){ //percorre as linhas
+			if(abs(A[l][k]) > maior){
+				maior = A[l][k];//pega o maior pivo
+				linha = l; //acha a linha do maior pivô
+			}
+		}
+		if(linha!=k){
+			for (int t = k; t < n; t++){//percorre as colunas
+				//troca as linhas  
+				aux = A[linha][t];
+				A[linha][t] = A[k][t];
+				A[k][t] = aux;
+			}			
+		}
+
+		//troca as linhas
+		for (int i = k+1; i < n; i++){ //percorre as linhas
 			m = A[i][k]/A[k][k];
 			A[i][k] = 0;
 			for (int j = k+1; j < n; j++){//percorre as linhas calculando seus novos valores
