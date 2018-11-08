@@ -25,10 +25,13 @@ int main(int argc, char const *argv[]){
 	
 	//Eliminação
 	for (int k = 0; k < n-1; k++){//percorre as colunas
-		maior = -numeric_limits<double>::max();
+		maior = -numeric_limits<double>::max();//-infinito
+
+
+		//pivotamento
 		for (int l = k; l < n; l++){ //percorre as linhas
 			if(abs(A[l][k]) > maior){
-				maior = A[l][k];//pega o maior pivo
+				maior = abs(A[l][k]);//pega o maior pivo
 				linha = l; //acha a linha do maior pivô
 			}
 		}
@@ -38,10 +41,12 @@ int main(int argc, char const *argv[]){
 				aux = A[linha][t];
 				A[linha][t] = A[k][t];
 				A[k][t] = aux;
-			}			
+			}
+			aux = b[linha][0];
+			b[linha][0] = b[k][0];
+			b[k][0] = aux;
 		}
-
-		//troca as linhas
+		//end_pivotamento
 		for (int i = k+1; i < n; i++){ //percorre as linhas
 			m = A[i][k]/A[k][k];
 			A[i][k] = 0;
@@ -55,13 +60,14 @@ int main(int argc, char const *argv[]){
 	//resolução do sistema
 	
 	x[n][0] = b[n][0]/A[n][n];
-	for (int k = n-1; k >= 0; k--){
+	for (int k = n-1; k >= 0; k--){//substituição retroativa
 		s = 0;
 		for (int j = k+1; j < n; j++){
 			s = s + A[k][j]*x[j][0];
 		}
 		x[k][0] = (b[k][0]-s)/A[k][k];
 	}
+
 	//imprimir x
 	cout << "Vetor resposta:" << endl;
 	for (int i = 0; i < n; i++){
