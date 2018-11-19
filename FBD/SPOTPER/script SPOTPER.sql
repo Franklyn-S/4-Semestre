@@ -2,8 +2,8 @@
 CREATE DATABASE spotper
 ON
         PRIMARY(
-        NAME = 'spotper'
-        FILENAME = 'C:\FBD\spotper.mdf'
+        NAME = 'spotper',
+        FILENAME = 'C:\FBD\spotper.mdf',
         SIZE = 5120KB,
         FILEGROWTH = 1024KB
         ),
@@ -16,7 +16,7 @@ ON
         ),
         (
         NAME = 'spotper_002',
-        FILENAME = 'C:\FBD\spotper_002.ndf'
+        FILENAME = 'C:\FBD\spotper_002.ndf',
         SIZE = 1024KB,
         MAXSIZE = 3072KB,
         FILEGROWTH = 15%
@@ -24,7 +24,7 @@ ON
 
         FILEGROUP spotper_fg02(
         NAME = 'loja_003',
-        FILENAME = 'C:\FBD\spotper_003.ndf'
+        FILENAME = 'C:\FBD\spotper_003.ndf',
         SIZE = 1024KB,
         MAXSIZE = 5120KB,
         FILEGROWTH = 1024KB
@@ -142,18 +142,18 @@ CREATE TABLE telefone (
 
 
 --chaves primarias
-CONSTRAINT tipo_composicao_pk PRIMARY KEY (cod_tipo_comp)
-CONSTRAINT interprete_pk PRIMARY KEY (cod_inter)
-CONSTRAINT playlist_pk PRIMARY KEY (cod_playlist)
-CONSTRAINT periodo_musical_pk PRIMARY KEY (cod_per)
-CONSTRAINT compositor_pk PRIMARY KEY (cod_comp)
-CONSTRAINT gravadora_pk PRIMARY KEY (cod_grav)
-CONSTRAINT album_pk PRIMARY KEY (cod_album)
-CONSTRAINT faixa_pk PRIMARY KEY (numero, cod_album_faixa)
-CONSTRAINT faixa_playlist_pk PRIMARY KEY (cod_playlist, numero, cod_album)
-CONSTRAINT aux_comp_pk PRIMARY KEY (cod_comp_aux, numero_aux_comp, cod_album_aux_comp)
-CONSTRAINT aux_inter_pk PRIMARY KEY (cod_inter_aux, numero_aux_inter, cod_album_aux)
-CONSTRAINT telefone_pk PRIMARY KEY (telefone, cod_grav_tel)
+CONSTRAINT tipo_composicao_pk PRIMARY KEY (cod_tipo_comp);
+CONSTRAINT interprete_pk PRIMARY KEY (cod_inter);
+CONSTRAINT playlist_pk PRIMARY KEY (cod_playlist);
+CONSTRAINT periodo_musical_pk PRIMARY KEY (cod_per);
+CONSTRAINT compositor_pk PRIMARY KEY (cod_comp);
+CONSTRAINT gravadora_pk PRIMARY KEY (cod_grav);
+CONSTRAINT album_pk PRIMARY KEY (cod_album);
+CONSTRAINT faixa_pk PRIMARY KEY (numero, cod_album_faixa);
+CONSTRAINT faixa_playlist_pk PRIMARY KEY (cod_playlist, numero, cod_album);
+CONSTRAINT aux_comp_pk PRIMARY KEY (cod_comp_aux, numero_aux_comp, cod_album_aux_comp);
+CONSTRAINT aux_inter_pk PRIMARY KEY (cod_inter_aux, numero_aux_inter, cod_album_aux);
+CONSTRAINT telefone_pk PRIMARY KEY (telefone, cod_grav_tel);
 
 -- Chaves estrangeiras --
 ALTER TABLE faixa ADD CONSTRAINT tipo_comosicao_faixa_fk
