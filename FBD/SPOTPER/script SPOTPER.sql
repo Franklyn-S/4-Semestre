@@ -1,22 +1,26 @@
--- CRIA√á√ÉO DAS TABELAS
+-- CRIA«√O DAS TABELAS
+use master;
+go
+DROP DATABASE spotper;
+
 CREATE DATABASE spotper
 ON
         PRIMARY(
         NAME = 'spotper',
-        FILENAME = 'C:\FBD\spotper.mdf',
+        FILENAME = 'C:\FBD1\spotper.mdf',
         SIZE = 5120KB,
         FILEGROWTH = 1024KB
         ),
 
         FILEGROUP spotper_fg01(
         NAME = 'spotper_001',
-        FILENAME = 'C:\FBD\spotper_001.ndf',
+        FILENAME = 'C:\FBD1\spotper_001.ndf',
         SIZE = 1024KB,
         FILEGROWTH = 30%  
         ),
         (
         NAME = 'spotper_002',
-        FILENAME = 'C:\FBD\spotper_002.ndf',
+        FILENAME = 'C:\FBD1\spotper_002.ndf',
         SIZE = 1024KB,
         MAXSIZE = 3072KB,
         FILEGROWTH = 15%
@@ -24,7 +28,7 @@ ON
 
         FILEGROUP spotper_fg02(
         NAME = 'loja_003',
-        FILENAME = 'C:\FBD\spotper_003.ndf',
+        FILENAME = 'C:\FBD1\spotper_003.ndf',
         SIZE = 1024KB,
         MAXSIZE = 5120KB,
         FILEGROWTH = 1024KB
@@ -33,10 +37,12 @@ ON
         LOG ON
         (
         NAME = 'spotper_log',
-        FILENAME = 'C:\FBD\spotper_log.ldf',
+        FILENAME = 'C:\FBD1\spotper_log.ldf',
         SIZE = 1024KB,
         FILEGROWTH = 10%
         )
+
+USE spotper;
 
 
 
@@ -141,22 +147,23 @@ CREATE TABLE telefone (
 )ON spotper_fg01;
 
 
+
 --chaves primarias
-CONSTRAINT tipo_composicao_pk PRIMARY KEY (cod_tipo_comp);
-CONSTRAINT interprete_pk PRIMARY KEY (cod_inter);
-CONSTRAINT playlist_pk PRIMARY KEY (cod_playlist);
-CONSTRAINT periodo_musical_pk PRIMARY KEY (cod_per);
-CONSTRAINT compositor_pk PRIMARY KEY (cod_comp);
-CONSTRAINT gravadora_pk PRIMARY KEY (cod_grav);
-CONSTRAINT album_pk PRIMARY KEY (cod_album);
-CONSTRAINT faixa_pk PRIMARY KEY (numero, cod_album_faixa);
-CONSTRAINT faixa_playlist_pk PRIMARY KEY (cod_playlist, numero, cod_album);
-CONSTRAINT aux_comp_pk PRIMARY KEY (cod_comp_aux, numero_aux_comp, cod_album_aux_comp);
-CONSTRAINT aux_inter_pk PRIMARY KEY (cod_inter_aux, numero_aux_inter, cod_album_aux);
-CONSTRAINT telefone_pk PRIMARY KEY (telefone, cod_grav_tel);
+ALTER TABLE tipo_composicao ADD CONSTRAINT tipo_composicao_pk PRIMARY KEY (cod_tipo_comp);
+ALTER TABLE interprete ADD CONSTRAINT interprete_pk PRIMARY KEY (cod_inter);
+ALTER TABLE playlist ADD CONSTRAINT playlist_pk PRIMARY KEY (cod_playlist);
+ALTER TABLE periodo_musical ADD CONSTRAINT periodo_musical_pk PRIMARY KEY (cod_per);
+ALTER TABLE compositor ADD CONSTRAINT compositor_pk PRIMARY KEY (cod_comp);
+ALTER TABLE gravadora ADD CONSTRAINT gravadora_pk PRIMARY KEY (cod_grav);
+ALTER TABLE album ADD CONSTRAINT album_pk PRIMARY KEY (cod_album);
+ALTER TABLE faixa ADD CONSTRAINT faixa_pk PRIMARY KEY (numero, cod_album_faixa);
+ALTER TABLE faixa_playlist ADD CONSTRAINT faixa_playlist_pk PRIMARY KEY (cod_playlist, numero, cod_album);
+ALTER TABLE aux_comp ADD CONSTRAINT aux_comp_pk PRIMARY KEY (cod_comp_aux, numero_aux_comp, cod_album_aux_comp);
+ALTER TABLE aux_inter ADD CONSTRAINT aux_inter_pk PRIMARY KEY (cod_inter_aux, numero_aux_inter, cod_album_aux);
+ALTER TABLE telefone ADD CONSTRAINT telefone_pk PRIMARY KEY (telefone, cod_grav_tel);
 
 -- Chaves estrangeiras --
-ALTER TABLE faixa ADD CONSTRAINT tipo_comosicao_faixa_fk
+ALTER TABLE faixa ADD CONSTRAINT tipo_composicao_faixa_fk
 FOREIGN KEY (cod_tipo_comp)
 REFERENCES tipo_composicao (cod_tipo_comp)
 ON DELETE NO ACTION
@@ -216,14 +223,10 @@ REFERENCES faixa (numero, cod_album_faixa)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION;
 
-ALTER TABLE album_faixa ADD CONSTRAINT faixa_album_faixa_fk
-FOREIGN KEY (numero, cod_album)
-REFERENCES faixa (numero, cod_album_faixa)
-ON DELETE NO ACTION
-ON UPDATE NO ACTION;
 
 ALTER TABLE faixa_playlist ADD CONSTRAINT faixa_componentes_fk
 FOREIGN KEY (numero, cod_album)
 REFERENCES faixa (numero, cod_album_faixa)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION;
+
