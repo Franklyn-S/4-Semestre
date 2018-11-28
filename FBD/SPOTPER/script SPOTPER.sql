@@ -1,5 +1,4 @@
-﻿-- CRIAÇÃO DAS TABELAS
-USE master;
+﻿USE master;
 GO
 
 IF EXISTS(select * from sys.databases where name='spotper')
@@ -68,7 +67,7 @@ CHECK (tipo_compra = 'cd' or tipo_compra = 'vinil' or tipo_compra = 'download');
 
 CREATE TABLE faixa (
                 numero INTEGER NOT NULL,
-                cod_album_faixa INTEGER NOT NULL,
+                cod_album INTEGER NOT NULL,
                 descricao VARCHAR NOT NULL,
                 tmp_exec VARCHAR NOT NULL,
                 tipo_grav VARCHAR NOT NULL, -- ADD ou DDD
@@ -94,9 +93,9 @@ CREATE TABLE interprete (
 
 --interprete NxN faixa
 CREATE TABLE aux_inter (
-                cod_inter_aux INTEGER NOT NULL,
-                numero_aux_inter INTEGER NOT NULL,
-                cod_album_aux INTEGER NOT NULL,
+                cod_inter INTEGER NOT NULL,
+                numero INTEGER NOT NULL,
+                cod_album INTEGER NOT NULL,
                
 )ON spotper_fg01;
 
@@ -113,9 +112,9 @@ CREATE TABLE compositor (
 
 --compositor NxN faixa
 CREATE TABLE aux_compositor (
-                cod_comp_aux INTEGER NOT NULL,
-                numero_aux_compositor INTEGER NOT NULL,
-                cod_album_aux_compositor INTEGER NOT NULL,
+                cod_comp INTEGER NOT NULL,
+                numero INTEGER NOT NULL,
+                cod_album INTEGER NOT NULL,
                
 )ON spotper_fg01;
 
@@ -172,16 +171,16 @@ ALTER TABLE periodo_musical ADD CONSTRAINT periodo_musical_pk PRIMARY KEY (cod_p
 ALTER TABLE compositor ADD CONSTRAINT compositor_pk PRIMARY KEY (cod_comp);
 ALTER TABLE gravadora ADD CONSTRAINT gravadora_pk PRIMARY KEY (cod_grav);
 ALTER TABLE album ADD CONSTRAINT album_pk PRIMARY KEY (cod_album);
-ALTER TABLE faixa ADD CONSTRAINT faixa_pk PRIMARY KEY NONCLUSTERED (numero, cod_album_faixa); --não clusterizado
+ALTER TABLE faixa ADD CONSTRAINT faixa_pk PRIMARY KEY NONCLUSTERED (numero, cod_album); --não clusterizado
 ALTER TABLE faixa_playlist ADD CONSTRAINT faixa_playlist_pk PRIMARY KEY (cod_playlist, numero, cod_album);
-ALTER TABLE aux_compositor ADD CONSTRAINT aux_compositor_pk PRIMARY KEY (cod_comp_aux, numero_aux_compositor, cod_album_aux_compositor);
-ALTER TABLE aux_inter ADD CONSTRAINT aux_inter_pk PRIMARY KEY (cod_inter_aux, numero_aux_inter, cod_album_aux);
+ALTER TABLE aux_compositor ADD CONSTRAINT aux_compositor_pk PRIMARY KEY (cod_comp, numero, cod_album);
+ALTER TABLE aux_inter ADD CONSTRAINT aux_inter_pk PRIMARY KEY (cod_inter, numero, cod_album);
 ALTER TABLE telefone ADD CONSTRAINT telefone_pk PRIMARY KEY (telefone, cod_grav_tel);
 
 
 --questão 4
 CREATE CLUSTERED INDEX faixa_album_index 
-ON faixa(cod_album_faixa) 
+ON faixa(cod_album) 
 WITH (fillfactor=100, pad_index=on);
 
 
@@ -197,7 +196,7 @@ ON DELETE NO ACTION
 ON UPDATE CASCADE;
 
 ALTER TABLE aux_inter ADD CONSTRAINT interprete_aux_inter_fk
-FOREIGN KEY (cod_inter_aux)
+FOREIGN KEY (cod_inter)
 REFERENCES interprete (cod_inter)
 ON DELETE NO ACTION
 ON UPDATE CASCADE;
@@ -215,7 +214,7 @@ ON DELETE NO ACTION
 ON UPDATE CASCADE;
 
 ALTER TABLE aux_compositor ADD CONSTRAINT compositor_aux_compositor_fk
-FOREIGN KEY (cod_comp_aux)
+FOREIGN KEY (cod_comp)
 REFERENCES compositor (cod_comp)
 ON DELETE NO ACTION
 ON UPDATE CASCADE;
@@ -233,38 +232,39 @@ ON DELETE NO ACTION
 ON UPDATE CASCADE;
 
 ALTER TABLE faixa ADD CONSTRAINT album_faixa_fk
-FOREIGN KEY (cod_album_faixa)
+FOREIGN KEY (cod_album)
 REFERENCES album (cod_album)
 ON DELETE CASCADE
 ON UPDATE CASCADE;
 
 ALTER TABLE aux_inter ADD CONSTRAINT faixa_aux_inter_fk
-FOREIGN KEY (numero_aux_inter, cod_album_aux)
-REFERENCES faixa (numero, cod_album_faixa)
+FOREIGN KEY (numero, cod_album)
+REFERENCES faixa (numero, cod_album)
 ON DELETE CASCADE
 ON UPDATE CASCADE;
 
 ALTER TABLE aux_compositor ADD CONSTRAINT faixa_aux_compositor_fk
-FOREIGN KEY (numero_aux_compositor, cod_album_aux_compositor)
-REFERENCES faixa (numero, cod_album_faixa)
+FOREIGN KEY (numero, cod_album)
+REFERENCES faixa (numero, cod_album)
 ON DELETE CASCADE
 ON UPDATE CASCADE;
 
 
 ALTER TABLE faixa_playlist ADD CONSTRAINT faixa_componentes_fk
 FOREIGN KEY (numero, cod_album)
-REFERENCES faixa (numero, cod_album_faixa)
+REFERENCES faixa (numero, cod_album)
 ON DELETE CASCADE
 ON UPDATE CASCADE;
 
 --------------------||TRIGGERS||------------------------
+GO
 CREATE TRIGGER QTD_MAX_FAIXA_ALBUM
 ON faixa
 AFTER INSERT
 AS
 IF( ((select count(*)
         from faixa, inserted
-        where faixa.cod_album_faixa = inserted.cod_album_faixa)+1) > (64)) 
+        where faixa.cod_album = inserted.cod_album)+1) > (64)) 
 
 BEGIN
         RAISERROR('Limite máximo de faixas no album atingido!!!', 10, 6)
@@ -275,6 +275,7 @@ END;
 
 
 -----------------||VIEW MATERIALIZADA||-----------------
+GO
 
 CREATE VIEW VW_PLAYLIST(cod_playlist, nome, qtd_album)
 WITH SCHEMABINDING
@@ -282,11 +283,34 @@ AS
 SELECT p.cod_playlist, p.nome, count_big(*) qtd_album
 FROM dbo.playlist p, dbo.faixa_playlist fp, dbo.faixa f
 WHERE p.cod_playlist = fp.cod_playlist and
-fp.numero = f.numero and fp.cod_album = f.cod_album_faixa
+fp.numero = f.numero and fp.cod_album = f.cod_album
 GROUP BY p.nome, p.cod_playlist
 
 GO
 
 CREATE UNIQUE CLUSTERED INDEX I_VW_PLAYLIST
-ON VW_PLAYLIST(cod_playlist, nome)
+ON VW_PLAYLIST(cod_playlist, nome);
 
+--------------||FUNCTIONS       ||---------------
+--parâmetro de entrada o nome (ou parte do)
+--nome do compositor e o parâmetro de saída todos os álbuns com obras
+--compostas pelo compositor
+GO
+CREATE FUNCTION albuns_compostos(@nome_input VARCHAR(60))
+RETURNS @rtnTable TABLE(
+                                cod_album INTEGER NOT NULL,
+                cod_grav INTEGER NOT NULL,
+                descricao VARCHAR NOT NULL,
+                preco_compra FLOAT NOT NULL,
+                dt_compra DATE NOT NULL,
+                tipo_compra VARCHAR NOT NULL, -- fisica ou download
+                dt_grav DATE NOT NULL)
+AS
+BEGIN
+INSERT INTO @rtnTable
+        SELECT a.cod_album, a.cod_grav, a.descricao, a.preco_compra, a.dt_compra, a.tipo_compra, a.dt_grav
+        FROM album a, aux_compositor ac, compositor c
+        WHERE a.cod_album = ac.cod_album and ac.cod_comp = c.cod_comp and c.nome LIKE '%'+@nome_input+'%'
+
+RETURN
+END
