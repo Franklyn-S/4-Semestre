@@ -1,8 +1,8 @@
--- CRIAÇÃO DAS TABELAS
-use master;
-go
+﻿-- CRIAÇÃO DAS TABELAS
+USE master;
+GO
 
-IF OBJECT_ID('spoter', 'U') IS NOT NULL 
+IF EXISTS(select * from sys.databases where name='spotper')
 DROP DATABASE spotper;
 
 CREATE DATABASE spotper
@@ -130,8 +130,6 @@ ADD CONSTRAINT descricao_check
 CHECK (descricao = 'idade media' or descricao = 'renascenca' or descricao = 'barroco' or 
         descricao = 'classico' or descricao = 'romantico' or descricao = 'moderno');
 
-
-
 CREATE TABLE gravadora (
                 cod_grav INTEGER NOT NULL,
                 nome_grav VARCHAR NOT NULL,
@@ -166,10 +164,6 @@ CREATE TABLE playlist (
 )ON spotper_fg02;
 
 
-
-
-
-
 --chaves primarias
 ALTER TABLE composicao ADD CONSTRAINT composicao_pk PRIMARY KEY (cod_comp);
 ALTER TABLE interprete ADD CONSTRAINT interprete_pk PRIMARY KEY (cod_inter);
@@ -178,11 +172,22 @@ ALTER TABLE periodo_musical ADD CONSTRAINT periodo_musical_pk PRIMARY KEY (cod_p
 ALTER TABLE compositor ADD CONSTRAINT compositor_pk PRIMARY KEY (cod_comp);
 ALTER TABLE gravadora ADD CONSTRAINT gravadora_pk PRIMARY KEY (cod_grav);
 ALTER TABLE album ADD CONSTRAINT album_pk PRIMARY KEY (cod_album);
-ALTER TABLE faixa ADD CONSTRAINT faixa_pk PRIMARY KEY (numero, cod_album_faixa);
+ALTER TABLE faixa ADD CONSTRAINT faixa_pk PRIMARY KEY NONCLUSTERED (numero, cod_album_faixa); --não clusterizado
 ALTER TABLE faixa_playlist ADD CONSTRAINT faixa_playlist_pk PRIMARY KEY (cod_playlist, numero, cod_album);
 ALTER TABLE aux_compositor ADD CONSTRAINT aux_compositor_pk PRIMARY KEY (cod_comp_aux, numero_aux_compositor, cod_album_aux_compositor);
 ALTER TABLE aux_inter ADD CONSTRAINT aux_inter_pk PRIMARY KEY (cod_inter_aux, numero_aux_inter, cod_album_aux);
 ALTER TABLE telefone ADD CONSTRAINT telefone_pk PRIMARY KEY (telefone, cod_grav_tel);
+
+
+--questão 4
+CREATE CLUSTERED INDEX faixa_album_index 
+ON faixa(cod_album_faixa) 
+WITH (fillfactor=100, pad_index=on);
+
+
+CREATE INDEX faixa_composicao_pk 
+ON faixa(cod_comp) 
+WITH (fillfactor=100, pad_index=on);
 
 -- Chaves estrangeiras --
 ALTER TABLE faixa ADD CONSTRAINT composicao_faixa_fk
@@ -236,18 +241,52 @@ ON UPDATE CASCADE;
 ALTER TABLE aux_inter ADD CONSTRAINT faixa_aux_inter_fk
 FOREIGN KEY (numero_aux_inter, cod_album_aux)
 REFERENCES faixa (numero, cod_album_faixa)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE CASCADE;
 
 ALTER TABLE aux_compositor ADD CONSTRAINT faixa_aux_compositor_fk
 FOREIGN KEY (numero_aux_compositor, cod_album_aux_compositor)
 REFERENCES faixa (numero, cod_album_faixa)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE CASCADE;
 
 
 ALTER TABLE faixa_playlist ADD CONSTRAINT faixa_componentes_fk
 FOREIGN KEY (numero, cod_album)
 REFERENCES faixa (numero, cod_album_faixa)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE CASCADE;
+
+--------------------||TRIGGERS||------------------------
+CREATE TRIGGER QTD_MAX_FAIXA_ALBUM
+ON faixa
+AFTER INSERT
+AS
+IF( ((select count(*)
+        from faixa, inserted
+        where faixa.cod_album_faixa = inserted.cod_album_faixa)+1) > (64)) 
+
+BEGIN
+        RAISERROR('Limite máximo de faixas no album atingido!!!', 10, 6)
+        ROLLBACK TRANSACTION
+END;
+
+--INSERIRNDO DADOS
+
+
+-----------------||VIEW MATERIALIZADA||-----------------
+
+CREATE VIEW VW_PLAYLIST(cod_playlist, nome, qtd_album)
+WITH SCHEMABINDING
+AS
+SELECT p.cod_playlist, p.nome, count_big(*) qtd_album
+FROM dbo.playlist p, dbo.faixa_playlist fp, dbo.faixa f
+WHERE p.cod_playlist = fp.cod_playlist and
+fp.numero = f.numero and fp.cod_album = f.cod_album_faixa
+GROUP BY p.nome, p.cod_playlist
+
+GO
+
+CREATE UNIQUE CLUSTERED INDEX I_VW_PLAYLIST
+ON VW_PLAYLIST(cod_playlist, nome)
+
