@@ -257,6 +257,18 @@ ON DELETE CASCADE
 ON UPDATE CASCADE;
 
 --------------------||TRIGGERS||------------------------
+--incompleto
+/*
+GO
+CREATE TRIGGER PRECO_ALBUM
+ON album
+AFTER INSERT
+AS
+IF ( () )
+
+SELECT AVG(preco_compra) from album;
+
+*/
 GO
 CREATE TRIGGER QTD_MAX_FAIXA_ALBUM
 ON faixa
