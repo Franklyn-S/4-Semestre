@@ -1,4 +1,4 @@
-ï»¿USE master;
+USE master;
 GO
 
 IF EXISTS(select * from sys.databases where name='spotper')
@@ -87,7 +87,7 @@ CREATE TABLE composicao (
 CREATE TABLE interprete (
                 cod_inter INTEGER NOT NULL,
                 nome VARCHAR NOT NULL,
-                tipo VARCHAR NOT NULL, -- Tipo de intÃ©rprete pode ser orquestra, trio, quarteto, ensemble, soprano, tenor, etc...
+                tipo VARCHAR NOT NULL, -- Tipo de intérprete pode ser orquestra, trio, quarteto, ensemble, soprano, tenor, etc...
                 
 )ON spotper_fg01;
 
@@ -121,7 +121,7 @@ CREATE TABLE aux_compositor (
 CREATE TABLE periodo_musical (
                 cod_per INTEGER NOT NULL,
                 intervalo VARCHAR NOT NULL,
-                descricao VARCHAR NOT NULL, -- idade mÃ©dia, renascenÃ§a, barroco, clÃ¡ssico, romÃ¢ntico e moderno
+                descricao VARCHAR NOT NULL, -- idade média, renascença, barroco, clássico, romântico e moderno
 )ON spotper_fg01;
 
 ALTER TABLE periodo_musical 
@@ -171,14 +171,14 @@ ALTER TABLE periodo_musical ADD CONSTRAINT periodo_musical_pk PRIMARY KEY (cod_p
 ALTER TABLE compositor ADD CONSTRAINT compositor_pk PRIMARY KEY (cod_comp);
 ALTER TABLE gravadora ADD CONSTRAINT gravadora_pk PRIMARY KEY (cod_grav);
 ALTER TABLE album ADD CONSTRAINT album_pk PRIMARY KEY (cod_album);
-ALTER TABLE faixa ADD CONSTRAINT faixa_pk PRIMARY KEY NONCLUSTERED (numero, cod_album); --nÃ£o clusterizado
+ALTER TABLE faixa ADD CONSTRAINT faixa_pk PRIMARY KEY NONCLUSTERED (numero, cod_album); --não clusterizado
 ALTER TABLE faixa_playlist ADD CONSTRAINT faixa_playlist_pk PRIMARY KEY (cod_playlist, numero, cod_album);
 ALTER TABLE aux_compositor ADD CONSTRAINT aux_compositor_pk PRIMARY KEY (cod_comp, numero, cod_album);
 ALTER TABLE aux_inter ADD CONSTRAINT aux_inter_pk PRIMARY KEY (cod_inter, numero, cod_album);
 ALTER TABLE telefone ADD CONSTRAINT telefone_pk PRIMARY KEY (telefone, cod_grav_tel);
 
 
---questÃ£o 4
+--questão 4
 CREATE CLUSTERED INDEX faixa_album_index 
 ON faixa(cod_album) 
 WITH (fillfactor=100, pad_index=on);
@@ -257,6 +257,23 @@ ON DELETE CASCADE
 ON UPDATE CASCADE;
 
 --------------------||TRIGGERS||------------------------
+
+
+GO
+CREATE TRIGGER PRECO_ALBUM
+ON album
+AFTER INSERT
+AS
+IF ( (SELECT preco_compra FROM inserted) > (3 * (SELECT AVG(preco_compra) 
+	  FROM album a inner join faixa f 
+	  ON f.cod_album = a.cod_album 
+	  WHERE tipo_grav = 'DDD')) )
+BEGIN
+	RAISERROR('', 4, 2)
+	ROLLBACK TRANSACTION
+END;
+
+
 GO
 CREATE TRIGGER QTD_MAX_FAIXA_ALBUM
 ON faixa
@@ -267,9 +284,27 @@ IF( ((select count(*)
         where faixa.cod_album = inserted.cod_album)+1) > (64)) 
 
 BEGIN
-        RAISERROR('Limite mÃ¡ximo de faixas no album atingido!!!', 10, 6)
+        RAISERROR('Limite máximo de faixas no album atingido!!!', 10, 6)
         ROLLBACK TRANSACTION
 END;
+
+--3a
+GO
+CREATE TRIGGER BARROCO_DDD
+ON aux_compositor
+AFTER INSERT, UPDATE
+AS
+IF ( EXISTS(SELECT f.numero 'Numero da Faixa', f.cod_album 'Código album'
+			FROM inserted ac, faixa f, compositor c, periodo_musical p
+			WHERE f.numero = ac.numero and f.cod_album = ac.cod_album and 
+			ac.cod_comp = c.cod_comp and c.cod_per = p.cod_per and p.descricao like 'barroco'
+			and f.tipo_grav != 'DDD' ) )
+BEGIN
+	RAISERROR('Faixa com período Barroco só pode ser adquirida se o tipo de gravação for DDD', 10, 6)
+	ROLLBACK TRANSACTION
+END;
+
+
 
 --INSERIRNDO DADOS
 
@@ -292,8 +327,8 @@ CREATE UNIQUE CLUSTERED INDEX I_VW_PLAYLIST
 ON VW_PLAYLIST(cod_playlist, nome);
 
 --------------||FUNCTIONS       ||---------------
---parÃ¢metro de entrada o nome (ou parte do)
---nome do compositor e o parÃ¢metro de saÃ­da todos os Ã¡lbuns com obras
+--parâmetro de entrada o nome (ou parte do)
+--nome do compositor e o parâmetro de saída todos os álbuns com obras
 --compostas pelo compositor
 GO
 CREATE FUNCTION albuns_compostos(@nome_input VARCHAR(60))
